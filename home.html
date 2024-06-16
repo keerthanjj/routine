@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home Page with To-Do List and Routine</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Just Do It!</h1>
+      <div class="schedule-toggle">
+        <button onclick="toggleWeekdaySchedule()">
+          Display/Hide Weekday Schedule
+        </button>
+      </div>
+
+      <div id="weekday-schedule" class="schedule">
+        <!-- Schedule will be displayed here -->
+      </div>
+
+      <h2>To-Do List</h2>
+      <form id="todo-form">
+        <input type="text" id="todo-input" placeholder="Add a new task..." />
+        <button type="submit">Add</button>
+      </form>
+      <ul id="todo-list" class="task-list">
+        <!-- Tasks will be dynamically added here -->
+      </ul>
+      <h2>Completed</h2>
+      <ul id="completed-list" class="task-list">
+        <!-- Completed tasks will be moved here -->
+      </ul>
+      <h2 class="current-heading">Current Activity</h2>
+      <div id="current-activity" class="current-task"></div>
+    </div>
+
+    <script>
+      // Function to create a new task item
+      function createTaskElement(taskText) {
+        const li = document.createElement("li");
+        li.textContent = taskText;
+        li.addEventListener("click", () => {
+          li.classList.toggle("completed");
+          if (li.classList.contains("completed")) {
+            // Move to completed section
+            document.getElementById("completed-list").appendChild(li);
+          } else {
+            // Move back to todo list
+            document.getElementById("todo-list").appendChild(li);
+          }
+          saveTasks(); // Save tasks after modification
+        });
+        return li;
+      }
+
+      // Function to toggle weekday schedule display
+      function toggleWeekdaySchedule() {
+        const scheduleDiv = document.getElementById("weekday-schedule");
+
+        // Toggle visibility
+        if (scheduleDiv.style.display === "none") {
+          showWeekdaySchedule(scheduleDiv);
+        } else {
+          hideWeekdaySchedule(scheduleDiv);
+        }
+      }
+
+      // Function to display weekday schedule
+      function showWeekdaySchedule(scheduleDiv) {
+        scheduleDiv.innerHTML = "<h2>Weekday Schedule</h2>";
+
+        const weekdaySchedule = {
+          Weekday: [
+            "05:00 - Wake up and morning stretches",
+            "06:00 - Upayoga",
+            "06:15 - Yoga Namaskar",
+            "06:25 - Sprinting",
+            "07:00 - Surya Namaskar and yoga asanas",
+            "07:20 - Chanting",
+            "07:40 - Third eye meditation",
+            "08:00 - Goals manifestation",
+            "08:20 - Neurobic exercises",
+            "08:40 - Reading/podcast",
+            "09:10 - Breakfast and prepare for work",
+            "09:50 - Work",
+            "18:00 - Evening workout",
+            "19:00 - Dinner and family time",
+            "20:00 - Relaxation (TV series/movies)",
+            "21:00 - Weight lifting",
+            "22:00 - Bath and wind down",
+            "22:30 - Journaling and prepare for sleep",
+            "22:45 - Sleep by 10:15",
+          ],
+        };
+
+        const scheduleList = document.createElement("ul");
+
+        // Display weekday schedule
+        weekdaySchedule["Weekday"].forEach((task) => {
+          const listItem = document.createElement("li");
+          listItem.textContent = task;
+          scheduleList.appendChild(listItem);
+        });
+
+        scheduleDiv.appendChild(scheduleList);
+        scheduleDiv.style.display = "block";
+      }
+
+      // Function to hide weekday schedule
+      function hideWeekdaySchedule(scheduleDiv) {
+        scheduleDiv.style.display = "none";
+        scheduleDiv.innerHTML = ""; // Clear the content
+      }
+
+      // Function to add a new task to the to-do list
+      function addTask(taskText) {
+        const todoList = document.getElementById("todo-list");
+        const taskElement = createTaskElement(taskText);
+        todoList.appendChild(taskElement);
+        saveTasks(); // Save tasks after adding new task
+      }
+
+      // Function to save tasks to localStorage
+      function saveTasks() {
+        const todoList = document.getElementById("todo-list");
+        const completedList = document.getElementById("completed-list");
+
+        const tasks = {
+          todo: [],
+          completed: [],
+        };
+
+        todoList.childNodes.forEach((task) => {
+          tasks.todo.push(task.textContent);
+        });
+
+        completedList.childNodes.forEach((task) => {
+          tasks.completed.push(task.textContent);
+        });
+
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+      }
+
+      // Function to load tasks from localStorage
+      function loadTasks() {
+        const storedTasks = localStorage.getItem("tasks");
+        if (storedTasks) {
+          const tasks = JSON.parse(storedTasks);
+          tasks.todo.forEach((task) => addTask(task));
+          tasks.completed.forEach((task) => {
+            addTask(task);
+            const taskElement = document.querySelector(
+              `#todo-list li:last-child`
+            );
+            taskElement.classList.add("completed");
+            document.getElementById("completed-list").appendChild(taskElement);
+          });
+        }
+      }
+
+      // Function to display current activity based on time and day
+      function displayCurrentActivity() {
+        const now = new Date();
+        const currentDay = now
+          .toLocaleString("en-US", { weekday: "long" })
+          .toLowerCase();
+        const currentTime =
+          now.getHours() + ":" + ("0" + now.getMinutes()).slice(-2);
+
+        const weekdayTemplate = {
+          "05:00": "Wake up and morning stretches",
+          "06:00": "Upayoga",
+          "06:15": "Yoga Namaskar",
+          "06:25": "Sprinting",
+          "06:55": "Surya Namaskar and yoga asanas",
+          "07:15": "Chanting",
+          "07:35": "Third eye meditation",
+          "07:55": "Goals manifestation",
+          "08:15": "Neurobic exercises",
+          "08:35": "Reading/podcast",
+          "09:05": "Breakfast and prepare for work",
+          "09:45": "Work",
+          "18:00": "Evening workout",
+          "19:00": "Dinner and family time",
+          "20:00": "Relaxation (TV series/movies)",
+          "21:00": "Weight lifting",
+          "22:00": "Bath and wind down",
+          "22:30": "Journaling and prepare for sleep",
+          "22:45": "Sleep by 10:15",
+        };
+
+        const weekendMorningSchedule = {
+          saturday: {
+            "05:00": "Wake up and morning stretches",
+            "06:00": "Upayoga",
+            "06:15": "Yoga Namaskar",
+            "06:25": "Sprinting",
+            "06:55": "Surya Namaskar and yoga asanas",
+            "07:15": "Chanting",
+            "07:35": "Third eye meditation",
+            "07:55": "Goals manifestation",
+            "08:15": "Neurobic exercises",
+            "08:35": "Reading/podcast",
+            "09:05": "Breakfast and relax",
+          },
+          sunday: {
+            "05:00": "Wake up and morning stretches",
+            "06:00": "Upayoga",
+            "06:15": "Yoga Namaskar",
+            "06:25": "Sprinting",
+            "06:55": "Surya Namaskar and yoga asanas",
+            "07:15": "Chanting",
+            "07:35": "Third eye meditation",
+            "07:55": "Goals manifestation",
+            "08:15": "Neurobic exercises",
+            "08:35": "Reading/podcast",
+            "09:05": "Breakfast and relax",
+          },
+        };
+
+        let currentTask = null;
+
+        // Check if it's a weekday or weekend
+        if (currentDay === "saturday" || currentDay === "sunday") {
+          // Weekend schedule (morning routine only)
+          const weekendSchedule = weekendMorningSchedule[currentDay];
+          for (const time in weekendSchedule) {
+            if (currentTime >= time) {
+              currentTask = weekendSchedule[time];
+            } else {
+              break;
+            }
+          }
+        } else {
+          // Weekday schedule
+          const weekdayScheduleToday = weekdayTemplate;
+          for (const time in weekdayScheduleToday) {
+            if (currentTime >= time) {
+              currentTask = weekdayScheduleToday[time];
+            } else {
+              break;
+            }
+          }
+        }
+
+        // Display the current activity
+        if (currentTask) {
+          document.getElementById(
+            "current-activity"
+          ).textContent = `Current Activity: ${currentTask}`;
+        } else {
+          if (currentDay === "saturday" || currentDay === "sunday") {
+            document.getElementById(
+              "current-activity"
+            ).textContent = `Enjoy your weekend!`;
+          } else {
+            document.getElementById(
+              "current-activity"
+            ).textContent = `No scheduled activity at the moment.`;
+          }
+        }
+      }
+      // Function to update current activity display every minute
+      function updateCurrentActivity() {
+        displayCurrentActivity();
+        setInterval(displayCurrentActivity, 60000); // Update every minute
+      }
+
+      // Form submit event listener
+      document
+        .getElementById("todo-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const taskInput = document.getElementById("todo-input");
+          const taskText = taskInput.value.trim();
+          if (taskText !== "") {
+            addTask(taskText);
+            taskInput.value = "";
+          }
+        });
+
+      // Initial call to update current activity display
+      updateCurrentActivity();
+
+      // Load tasks from localStorage on page load
+      document.addEventListener("DOMContentLoaded", function () {
+        loadTasks();
+      });
+    </script>
+  </body>
+</html>
