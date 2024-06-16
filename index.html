@@ -36,21 +36,39 @@
     </div>
 
     <script>
-      // Function to create a new task item
-      function createTaskElement(taskText) {
+      // Function to create a new task item with delete button
+      function createTaskElement(taskText, isCompleted = false) {
         const li = document.createElement("li");
         li.textContent = taskText;
-        li.addEventListener("click", () => {
-          li.classList.toggle("completed");
-          if (li.classList.contains("completed")) {
-            // Move to completed section
-            document.getElementById("completed-list").appendChild(li);
-          } else {
-            // Move back to todo list
-            document.getElementById("todo-list").appendChild(li);
-          }
-          saveTasks(); // Save tasks after modification
+
+        // Delete button
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        deleteButton.addEventListener("click", () => {
+          li.remove();
+          saveTasks(); // Save tasks after deletion
         });
+        li.appendChild(deleteButton);
+
+        // Completion toggle
+        if (isCompleted) {
+          li.classList.add("completed");
+          document.getElementById("completed-list").appendChild(li);
+        } else {
+          const completeButton = document.createElement("button");
+          completeButton.textContent = "Complete";
+          completeButton.addEventListener("click", () => {
+            li.classList.toggle("completed");
+            if (li.classList.contains("completed")) {
+              document.getElementById("completed-list").appendChild(li);
+            } else {
+              document.getElementById("todo-list").appendChild(li);
+            }
+            saveTasks(); // Save tasks after modification
+          });
+          li.appendChild(completeButton);
+          document.getElementById("todo-list").appendChild(li);
+        }
         return li;
       }
 
@@ -132,11 +150,15 @@
         };
 
         todoList.childNodes.forEach((task) => {
-          tasks.todo.push(task.textContent);
+          if (!task.querySelector(".completed")) {
+            tasks.todo.push(task.textContent);
+          }
         });
 
         completedList.childNodes.forEach((task) => {
-          tasks.completed.push(task.textContent);
+          if (task.classList.contains("completed")) {
+            tasks.completed.push(task.textContent);
+          }
         });
 
         localStorage.setItem("tasks", JSON.stringify(tasks));
@@ -149,12 +171,7 @@
           const tasks = JSON.parse(storedTasks);
           tasks.todo.forEach((task) => addTask(task));
           tasks.completed.forEach((task) => {
-            addTask(task);
-            const taskElement = document.querySelector(
-              `#todo-list li:last-child`
-            );
-            taskElement.classList.add("completed");
-            document.getElementById("completed-list").appendChild(taskElement);
+            const taskElement = createTaskElement(task, true);
           });
         }
       }
@@ -261,6 +278,7 @@
           }
         }
       }
+
       // Function to update current activity display every minute
       function updateCurrentActivity() {
         displayCurrentActivity();
